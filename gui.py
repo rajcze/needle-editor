@@ -19,6 +19,7 @@ class Application:
         self.frame.grid()
         self.buildWidgets()
         self.images = []
+        self.needleCoordinates = [(0,0),(1200,800)]
 
     def buildWidgets(self):
         self.buttonFrame = tk.Frame(self.frame)
@@ -36,7 +37,7 @@ class Application:
         self.prevButton = tk.Button(self.buttonFrame, text="Previous image", command=self.prevImage)
         self.prevButton.grid(row=2,  column=0, sticky="nesw")
         
-        self.createButton = tk.Button(self.buttonFrame, text="Create needle")
+        self.createButton = tk.Button(self.buttonFrame, text="Show needle", command=self.showNeedle)
         self.createButton.grid(row=3,  column=0, sticky="nesw")
         
         self.loadButton = tk.Button(self.buttonFrame, text="Load needle")
@@ -57,6 +58,8 @@ class Application:
         self.pictureField = tk.Canvas(self.picFrame, height=800, width=1200, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
         self.pictureField.grid(row=0, column=0)
         self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
+        self.pictureField.bind("<Button 1>",self.getSCoordinates)
+        self.pictureField.bind("<Button 3>",self.getECoordinates)
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
@@ -66,8 +69,21 @@ class Application:
         
         self.jsonLabel = tk.Label(self.jsonFrame, text="Needle JSON data:")
         self.jsonLabel.grid(row=0, column=0)
+        
         self.jsonText = tk.Text(self.jsonFrame, width=30)
         self.jsonText.grid(row=1, column=0)
+        
+        self.needleUL = tk.Label(self.jsonFrame, text="Needle Upper Left Coordinates:")
+        self.needleUL.grid(row=2, column=0)
+        
+        self.ulEntry = tk.Entry(self.jsonFrame)
+        self.ulEntry.grid(row=3, column=0, sticky="ew")
+        
+        self.needleLR = tk.Label(self.jsonFrame, text="Needle Lower Right Coordinates:")
+        self.needleLR.grid(row=4, column=0)
+        
+        self.lrEntry = tk.Entry(self.jsonFrame)
+        self.lrEntry.grid(row=5, column=0, sticky="ew")
         
 
     def returnPath(self, image):
@@ -89,6 +105,7 @@ class Application:
         print(path)
         self.image = tk.PhotoImage(file=path)
         self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
+       
         
     def nextImage(self):
         """Display next image on the list."""
@@ -109,6 +126,22 @@ class Application:
             self.image = self.images[-1]
             self.imageCount = len(self.images)
         self.displayImage(self.returnPath(self.image))
+        
+    def showNeedle(self):
+        print(self.needleCoordinates)
+        
+    
+    def getSCoordinates(self,event):
+        self.needleCoordinates[0] = (event.x,event.y)
+        self.ulEntry.delete(0,"end")
+        self.ulEntry.insert("end",self.needleCoordinates[0])
+        self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates[0],self.needleCoordinates[1], outline="red")
+        
+    def getECoordinates(self,event):
+        self.needleCoordinates[1] = (event.x,event.y)
+        self.lrEntry.delete(0,"end")
+        self.lrEntry.insert("end",self.needleCoordinates[1])
+        self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates[0],self.needleCoordinates[1], outline="red")
             
         
 
