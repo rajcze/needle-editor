@@ -22,29 +22,43 @@ class Application:
 
     def buildWidgets(self):
         self.openDirButton = tk.Button(self.frame, text="Select image directory", width=15,  command=self.readimages)
-        self.openDirButton.grid(row=0, column=0)
+        self.openDirButton.grid(row=0, column=0, sticky="nesw")
 
-        self.quitButton = tk.Button(self.frame, text="Quit", fg="red", command=self.frame.quit,  width=15)
-        self.quitButton.grid(row=10, column=0)
+        self.quitButton = tk.Button(self.frame, text="Quit", fg="red", command=self.frame.quit)
+        self.quitButton.grid(row=10, column=0, sticky="nesw")
         
-        self.nextButton = tk.Button(self.frame, text="Next image", width=15, command=self.nextImage)
-        self.nextButton.grid(row=1,  column=0)
+        self.nextButton = tk.Button(self.frame, text="Next image", command=self.nextImage)
+        self.nextButton.grid(row=1,  column=0, sticky="nesw")
         
-        self.prevButton = tk.Button(self.frame, text="Previous image", width=15, command=self.prevImage)
-        self.prevButton.grid(row=2,  column=0)
+        self.prevButton = tk.Button(self.frame, text="Previous image", command=self.prevImage)
+        self.prevButton.grid(row=2,  column=0, sticky="nesw")
         
-        self.createButton = tk.Button(self.frame, text="Create needle", width=15)
-        self.createButton.grid(row=3,  column=0)
+        self.createButton = tk.Button(self.frame, text="Create needle")
+        self.createButton.grid(row=3,  column=0, sticky="nesw")
         
-        self.loadButton = tk.Button(self.frame, text="Load needle", width=15)
-        self.loadButton.grid(row=4,  column=0)
+        self.loadButton = tk.Button(self.frame, text="Load needle")
+        self.loadButton.grid(row=4,  column=0, sticky="nesw")
         
-        self.saveButton = tk.Button(self.frame, text="Save needle", width=15)
-        self.saveButton.grid(row=5,  column=0)
+        self.saveButton = tk.Button(self.frame, text="Save needle")
+        self.saveButton.grid(row=5,  column=0, sticky="nesw")
         
-        self.pictureField = tk.Canvas(self.frame, height=800, width=1200)
-        self.pictureField.grid(row=0, column=1, rowspan=6)
-    
+        self.picFrame = tk.Frame(self.frame)
+        self.picFrame.grid(row=0, column=1, rowspan=6, sticky="nesw")
+        
+        self.xscroll = tk.Scrollbar(self.picFrame, orient='horizontal')
+        self.xscroll.grid(row=1, column=0, sticky="we")
+        
+        self.yscroll = tk.Scrollbar(self.picFrame, orient='vertical')
+        self.yscroll.grid(row=0, column=1, columnspan=2, sticky="ns")
+
+        self.pictureField = tk.Canvas(self.picFrame, height=800, width=1200, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
+        self.pictureField.grid(row=0, column=0)
+        self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
+        
+        self.xscroll.config(command=self.pictureField.xview)
+        self.yscroll.config(command=self.pictureField.yview)
+        
+
     def returnPath(self, image):
         return os.path.join(self.directory, image)
     
