@@ -37,14 +37,17 @@ class Application:
         self.prevButton = tk.Button(self.buttonFrame, text="Previous image", command=self.prevImage)
         self.prevButton.grid(row=2,  column=0, sticky="nesw")
         
-        self.createButton = tk.Button(self.buttonFrame, text="Show needle", command=self.showNeedle)
+        self.createButton = tk.Button(self.buttonFrame, text="Show area", command=self.showNeedle)
         self.createButton.grid(row=3,  column=0, sticky="nesw")
         
+        self.hideButton = tk.Button(self.buttonFrame, text="Hide area", command=self.hideNeedle)
+        self.hideButton.grid(row=4, column=0, sticky="news")
+        
         self.loadButton = tk.Button(self.buttonFrame, text="Load needle")
-        self.loadButton.grid(row=4,  column=0, sticky="nesw")
+        self.loadButton.grid(row=5,  column=0, sticky="nesw")
         
         self.saveButton = tk.Button(self.buttonFrame, text="Save needle")
-        self.saveButton.grid(row=5,  column=0, sticky="nesw")
+        self.saveButton.grid(row=6,  column=0, sticky="nesw")
         
         self.picFrame = tk.Frame(self.frame)
         self.picFrame.grid(row=0, column=1)
@@ -128,20 +131,27 @@ class Application:
         self.displayImage(self.returnPath(self.image))
         
     def showNeedle(self):
-        print(self.needleCoordinates)
+        x = self.ulEntry.get().split(" ")
+        y = self.lrEntry.get().split(" ")
+        coordinates = x + y
+        self.rectangle = self.pictureField.create_rectangle(coordinates, outline="red")
+        
+    def hideNeedle(self):
+        self.pictureField.delete(self.rectangle)
+        
         
     
     def getSCoordinates(self,event):
         self.needleCoordinates[0] = (event.x,event.y)
         self.ulEntry.delete(0,"end")
         self.ulEntry.insert("end",self.needleCoordinates[0])
-        self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates[0],self.needleCoordinates[1], outline="red")
+        
         
     def getECoordinates(self,event):
         self.needleCoordinates[1] = (event.x,event.y)
         self.lrEntry.delete(0,"end")
         self.lrEntry.insert("end",self.needleCoordinates[1])
-        self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates[0],self.needleCoordinates[1], outline="red")
+        
             
         
 
