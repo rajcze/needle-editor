@@ -21,29 +21,32 @@ class Application:
         self.images = []
 
     def buildWidgets(self):
-        self.openDirButton = tk.Button(self.frame, text="Select image directory", width=15,  command=self.readimages)
+        self.buttonFrame = tk.Frame(self.frame)
+        self.buttonFrame.grid(row=0, column=0, rowspan=2, sticky="news")
+        
+        self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15,  command=self.readimages)
         self.openDirButton.grid(row=0, column=0, sticky="nesw")
 
-        self.quitButton = tk.Button(self.frame, text="Quit", fg="red", command=self.frame.quit)
+        self.quitButton = tk.Button(self.buttonFrame, text="Quit", fg="red", command=self.frame.quit)
         self.quitButton.grid(row=10, column=0, sticky="nesw")
         
-        self.nextButton = tk.Button(self.frame, text="Next image", command=self.nextImage)
+        self.nextButton = tk.Button(self.buttonFrame, text="Next image", command=self.nextImage)
         self.nextButton.grid(row=1,  column=0, sticky="nesw")
         
-        self.prevButton = tk.Button(self.frame, text="Previous image", command=self.prevImage)
+        self.prevButton = tk.Button(self.buttonFrame, text="Previous image", command=self.prevImage)
         self.prevButton.grid(row=2,  column=0, sticky="nesw")
         
-        self.createButton = tk.Button(self.frame, text="Create needle")
+        self.createButton = tk.Button(self.buttonFrame, text="Create needle")
         self.createButton.grid(row=3,  column=0, sticky="nesw")
         
-        self.loadButton = tk.Button(self.frame, text="Load needle")
+        self.loadButton = tk.Button(self.buttonFrame, text="Load needle")
         self.loadButton.grid(row=4,  column=0, sticky="nesw")
         
-        self.saveButton = tk.Button(self.frame, text="Save needle")
+        self.saveButton = tk.Button(self.buttonFrame, text="Save needle")
         self.saveButton.grid(row=5,  column=0, sticky="nesw")
         
         self.picFrame = tk.Frame(self.frame)
-        self.picFrame.grid(row=0, column=1, rowspan=6, sticky="nesw")
+        self.picFrame.grid(row=0, column=1)
         
         self.xscroll = tk.Scrollbar(self.picFrame, orient='horizontal')
         self.xscroll.grid(row=1, column=0, sticky="we")
@@ -57,6 +60,14 @@ class Application:
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
+        
+        self.jsonFrame = tk.Frame(self.frame)
+        self.jsonFrame.grid(row=0, column=2, sticky="news")
+        
+        self.jsonLabel = tk.Label(self.jsonFrame, text="Needle JSON data:")
+        self.jsonLabel.grid(row=0, column=0)
+        self.jsonText = tk.Text(self.jsonFrame, width=30)
+        self.jsonText.grid(row=1, column=0)
         
 
     def returnPath(self, image):
