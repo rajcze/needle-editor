@@ -1,2 +1,3 @@
 # needle-editor
-Python Needle Editor for creating OpenQA needles
+
+Python Needle Editor for creating OpenQA needles.
