@@ -201,6 +201,7 @@ class Application:
         #self.pictureField.focus_set()
         
     def loadNeedle(self):
+        """Load existing needle into the window."""
         image = self.returnPath(self.imageName).split("/")[-1]
         jSon = image.split(".")[0] + ".json"
         jSon = self.directory + "/" + jSon
@@ -213,6 +214,7 @@ class Application:
         self.parseData(data)
         
     def parseData(self, data):
+        """Read the json file and fill-in the fields."""
         properties = data["properties"]
         self.textField.delete("1.0", "end")
         for tag in data["tags"]:
@@ -229,8 +231,8 @@ class Application:
         self.typeList.insert("end", ntype)
         
         
-        
     def calculateCoordinates(self, xpos, ypos, wide, high):
+        """Calculate coordinates from position, width and height of needle."""
         apos = xpos + wide
         bpos = ypos + high
         coordinates = [xpos, ypos, apos, bpos]
