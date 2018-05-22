@@ -7,6 +7,7 @@ Created on Fri May 18 08:46:48 2018
 """
 
 import tkinter as tk
+from PIL import Image
 import os
 from tkinter import filedialog
 
@@ -19,13 +20,14 @@ class Application:
         self.frame.grid()
         self.buildWidgets()
         self.images = []
-        self.needleCoordinates = [(0,0),(1200,800)]
+        self.needleCoordinates = [0, 0, 100, 50]
+        self.directory = ""
 
     def buildWidgets(self):
         self.buttonFrame = tk.Frame(self.frame)
         self.buttonFrame.grid(row=0, column=0, rowspan=2, sticky="news")
-        
-        self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15,  command=self.readimages)
+
+        self.openDirButton = tk.Button(self.buttonFrame, text="Select image directory", width=15, command=self.readimages)
         self.openDirButton.grid(row=0, column=0, sticky="nesw")
 
         self.quitButton = tk.Button(self.buttonFrame, text="Quit", fg="red", command=self.frame.quit)
@@ -37,32 +39,36 @@ class Application:
         self.prevButton = tk.Button(self.buttonFrame, text="Previous image", command=self.prevImage)
         self.prevButton.grid(row=2,  column=0, sticky="nesw")
         
-        self.createButton = tk.Button(self.buttonFrame, text="Show area", command=self.showNeedle)
+        self.createButton = tk.Button(self.buttonFrame, text="Show needle", command=self.showNeedle)
         self.createButton.grid(row=3,  column=0, sticky="nesw")
         
-        self.hideButton = tk.Button(self.buttonFrame, text="Hide area", command=self.hideNeedle)
-        self.hideButton.grid(row=4, column=0, sticky="news")
+        self.modifyButton = tk.Button(self.buttonFrame, text="Modify needle", command=self.modifyNeedle)
+        self.modifyButton.grid(row=4, column=0, sticky="nesw")
+        
+        self.hideButton = tk.Button(self.buttonFrame, text="Hide needle", command=self.hideNeedle)
+        self.hideButton.grid(row=5, column=0, sticky="news")
         
         self.loadButton = tk.Button(self.buttonFrame, text="Load needle")
-        self.loadButton.grid(row=5,  column=0, sticky="nesw")
+        self.loadButton.grid(row=6,  column=0, sticky="nesw")
         
         self.saveButton = tk.Button(self.buttonFrame, text="Save needle")
-        self.saveButton.grid(row=6,  column=0, sticky="nesw")
+        self.saveButton.grid(row=7,  column=0, sticky="nesw")
         
         self.picFrame = tk.Frame(self.frame)
         self.picFrame.grid(row=0, column=1)
-        
+                
         self.xscroll = tk.Scrollbar(self.picFrame, orient='horizontal')
         self.xscroll.grid(row=1, column=0, sticky="we")
         
         self.yscroll = tk.Scrollbar(self.picFrame, orient='vertical')
         self.yscroll.grid(row=0, column=1, columnspan=2, sticky="ns")
 
-        self.pictureField = tk.Canvas(self.picFrame, height=800, width=1200, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
+        self.pictureField = tk.Canvas(self.picFrame, height=600, width=800, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
         self.pictureField.grid(row=0, column=0)
         self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
-        self.pictureField.bind("<Button 1>",self.getSCoordinates)
-        self.pictureField.bind("<Button 3>",self.getECoordinates)
+        self.pictureField.bind("<Button 1>", self.getSCoordinates)
+        self.pictureField.bind("<Button 3>", self.getECoordinates)
+        self.pictureField.bind("m", self.modifyNeedle)
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
@@ -106,8 +112,11 @@ class Application:
     def displayImage(self, path):
         """Display image on the canvas."""
         print(path)
+        self.picture = Image.open(path)
+        self.picsize = (self.picture.width,self.picture.height)
         self.image = tk.PhotoImage(file=path)
-        self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
+        self.background = self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
+        
        
         
     def nextImage(self):
@@ -130,27 +139,41 @@ class Application:
             self.imageCount = len(self.images)
         self.displayImage(self.returnPath(self.image))
         
-    def showNeedle(self):
+    
+    def getCoordinates(self):
         x = self.ulEntry.get().split(" ")
         y = self.lrEntry.get().split(" ")
-        coordinates = x + y
-        self.rectangle = self.pictureField.create_rectangle(coordinates, outline="red")
+        if not x:
+            self.needleCoordinates = [0, 0, 100, 200]
+        else:
+            self.needleCoordinates = x + y
+        
+    
+    def showNeedle(self):
+        self.getCoordinates()
+        self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
+        
+
+    def modifyNeedle(self):
+        self.getCoordinates()
+        self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def hideNeedle(self):
         self.pictureField.delete(self.rectangle)
-        
-        
     
     def getSCoordinates(self,event):
         self.needleCoordinates[0] = (event.x,event.y)
         self.ulEntry.delete(0,"end")
         self.ulEntry.insert("end",self.needleCoordinates[0])
-        
-        
+        self.pictureField.focus_set()
+             
     def getECoordinates(self,event):
         self.needleCoordinates[1] = (event.x,event.y)
         self.lrEntry.delete(0,"end")
         self.lrEntry.insert("end",self.needleCoordinates[1])
+        self.pictureField.focus_set()
+        
+    
         
             
         
