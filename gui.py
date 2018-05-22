@@ -9,9 +9,8 @@ Created on Fri May 18 08:46:48 2018
 import tkinter as tk
 from PIL import Image
 import os
-from tkinter import filedialog
-
-
+import json
+from tkinter import filedialog, messagebox
 
 class Application:
     """ Holds the GUI part and widgets """
@@ -22,7 +21,7 @@ class Application:
         self.images = []
         self.needleCoordinates = [0, 0, 100, 50]
         self.directory = ""
-
+        
     def buildWidgets(self):
         """Construct GUI"""
         self.buttonFrame = tk.Frame(self.frame)
@@ -49,7 +48,7 @@ class Application:
         self.hideButton = tk.Button(self.buttonFrame, text="Hide needle", command=self.hideNeedle)
         self.hideButton.grid(row=5, column=0, sticky="news")
         
-        self.loadButton = tk.Button(self.buttonFrame, text="Load needle")
+        self.loadButton = tk.Button(self.buttonFrame, text="Load needle", command=self.loadNeedle)
         self.loadButton.grid(row=6,  column=0, sticky="nesw")
         
         self.saveButton = tk.Button(self.buttonFrame, text="Save needle")
@@ -64,12 +63,13 @@ class Application:
         self.yscroll = tk.Scrollbar(self.picFrame, orient='vertical')
         self.yscroll.grid(row=0, column=1, columnspan=2, sticky="ns")
 
-        self.pictureField = tk.Canvas(self.picFrame, height=600, width=800, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
+        self.pictureField = tk.Canvas(self.picFrame, height=800, width=1200, xscrollcommand=self.xscroll.set, yscrollcommand=self.yscroll.set)
         self.pictureField.grid(row=0, column=0)
         self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
         self.pictureField.bind("<Button 1>", self.getSCoordinates)
         self.pictureField.bind("<Button 3>", self.getECoordinates)
-        self.pictureField.bind("m", self.modifyNeedle)
+        #self.pictureField.bind("m", self.modifyNeedle)
+        #self.pictureField.bind("m", lambda: self.modifyNeedle())
         
         self.xscroll.config(command=self.pictureField.xview)
         self.yscroll.config(command=self.pictureField.yview)
@@ -77,23 +77,41 @@ class Application:
         self.jsonFrame = tk.Frame(self.frame)
         self.jsonFrame.grid(row=0, column=2, sticky="news")
         
-        self.jsonLabel = tk.Label(self.jsonFrame, text="Needle JSON data:")
-        self.jsonLabel.grid(row=0, column=0)
+        self.nameLabel = tk.Label(self.jsonFrame, text="Filename:")
+        self.nameLabel.grid(row=0, column=0, sticky="w")
         
-        self.jsonText = tk.Text(self.jsonFrame, width=30)
-        self.jsonText.grid(row=1, column=0)
+        self.nameEntry = tk.Entry(self.jsonFrame)
+        self.nameEntry.grid(row=1, column=0, sticky="ew")
+        
+        self.propLabel = tk.Label(self.jsonFrame, text="Properties:")
+        self.propLabel.grid(row=2, column=0, sticky="w")
+        
+        self.propText = tk.Text(self.jsonFrame, width=50, height=10)
+        self.propText.grid(row=3, column=0, sticky="ew")
         
         self.needleUL = tk.Label(self.jsonFrame, text="Needle Upper Left Coordinates:")
-        self.needleUL.grid(row=2, column=0)
+        self.needleUL.grid(row=4, column=0, sticky="w")
         
         self.ulEntry = tk.Entry(self.jsonFrame)
-        self.ulEntry.grid(row=3, column=0, sticky="ew")
+        self.ulEntry.grid(row=5, column=0, sticky="ew")
         
         self.needleLR = tk.Label(self.jsonFrame, text="Needle Lower Right Coordinates:")
-        self.needleLR.grid(row=4, column=0)
+        self.needleLR.grid(row=6, column=0, sticky="w")
         
         self.lrEntry = tk.Entry(self.jsonFrame)
-        self.lrEntry.grid(row=5, column=0, sticky="ew")
+        self.lrEntry.grid(row=7, column=0, sticky="ew")
+        
+        self.listLabel = tk.Label(self.jsonFrame, text="Needle type:")
+        self.listLabel.grid(row=8, column=0, sticky="w")
+        
+        self.typeList = tk.Spinbox(self.jsonFrame, values=["match","ocr","someother"])
+        self.typeList.grid(row=9,column=0, sticky="ew")
+        
+        self.textLabel = tk.Label(self.jsonFrame, text="Tags:")
+        self.textLabel.grid(row=10, column=0, sticky="w")
+        
+        self.textField = tk.Text(self.jsonFrame, width=50, height=15)
+        self.textField.grid(row=11,column=0, sticky="ew")
         
 
     def returnPath(self, image):
@@ -109,37 +127,40 @@ class Application:
                 self.images.append(file)
         print("Found {} images.".format(len(self.images)))
         self.imageCount = 0
-        self.displayImage(self.returnPath(self.images[0]))
+        self.imageName = self.images[0]
+        self.displayImage(self.returnPath(self.imageName))
 
     def displayImage(self, path):
         """Display image on the canvas."""
         print(path)
         self.picture = Image.open(path)
+        width = self.picture.width
+        height = self.picture.height
         self.picsize = (self.picture.width,self.picture.height)
         self.image = tk.PhotoImage(file=path)
         self.background = self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
-        
-       
-        
+        self.nameEntry.delete(0, "end")
+        self.nameEntry.insert("end", self.imageName)
+               
     def nextImage(self):
         """Display next image on the list."""
         self.imageCount += 1
         try:
-            self.image = self.images[self.imageCount]
+            self.imageName = self.images[self.imageCount]
         except IndexError:
-            self.image = self.images[0]
+            self.imageName = self.images[0]
             self.imageCount = 0
-        self.displayImage(self.returnPath(self.image))
+        self.displayImage(self.returnPath(self.imageName))
 
     def prevImage(self):
         """Display previous image on the list."""
         self.imageCount -= 1
         try:
-            self.image = self.images[self.imageCount]
+            self.imageName = self.images[self.imageCount]
         except IndexError:
-            self.image = self.images[-1]
+            self.imageName = self.images[-1]
             self.imageCount = len(self.images)
-        self.displayImage(self.returnPath(self.image))
+        self.displayImage(self.returnPath(self.imageName))
         
     
     def getCoordinates(self):
@@ -150,8 +171,7 @@ class Application:
             self.needleCoordinates = [0, 0, 100, 200]
         else:
             self.needleCoordinates = x + y
-        
-    
+            
     def showNeedle(self):
         """Draw a rectangle around the needle area."""
         self.getCoordinates()
@@ -171,14 +191,50 @@ class Application:
         self.needleCoordinates[0] = (event.x,event.y)
         self.ulEntry.delete(0,"end")
         self.ulEntry.insert("end",self.needleCoordinates[0])
-        self.pictureField.focus_set()
+        #self.pictureField.focus_set()
              
     def getECoordinates(self,event):
         """Get lower right coordinates on right mouse click."""
         self.needleCoordinates[1] = (event.x,event.y)
         self.lrEntry.delete(0,"end")
         self.lrEntry.insert("end",self.needleCoordinates[1])
-        self.pictureField.focus_set()
+        #self.pictureField.focus_set()
+        
+    def loadNeedle(self):
+        image = self.returnPath(self.imageName).split("/")[-1]
+        jSon = image.split(".")[0] + ".json"
+        jSon = self.directory + "/" + jSon
+        try:
+            with open(jSon,"r") as jsonFile:
+                data = json.load(jsonFile)
+        except FileNotFoundError:
+            messagebox.showerror("Error", "No needle exists. Create one.")
+            
+        self.parseData(data)
+        
+    def parseData(self, data):
+        properties = data["properties"]
+        self.textField.delete("1.0", "end")
+        for tag in data["tags"]:
+            self.textField.insert("end", tag)
+            self.textField.insert("end", "\n")
+        area = data["area"][0]
+        coordinates = self.calculateCoordinates(int(area["xpos"]), int(area["ypos"]), int(area["width"]), int(area["height"]))
+        self.lrEntry.delete(0, "end")
+        self.lrEntry.insert("end", "{} {}".format(coordinates[2], coordinates[3]))
+        self.ulEntry.delete(0, "end")
+        self.ulEntry.insert("end", "{} {}".format(coordinates[0], coordinates[1]))
+        ntype = area["type"]
+        self.typeList.delete(0, "end")
+        self.typeList.insert("end", ntype)
+        
+        
+        
+    def calculateCoordinates(self, xpos, ypos, wide, high):
+        apos = xpos + wide
+        bpos = ypos + high
+        coordinates = [xpos, ypos, apos, bpos]
+        return coordinates
               
 
 #-----------------------------------------------------------------------------------------------
