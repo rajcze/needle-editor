@@ -24,6 +24,7 @@ class Application:
         self.directory = ""
 
     def buildWidgets(self):
+        """Construct GUI"""
         self.buttonFrame = tk.Frame(self.frame)
         self.buttonFrame.grid(row=0, column=0, rowspan=2, sticky="news")
 
@@ -96,6 +97,7 @@ class Application:
         
 
     def returnPath(self, image):
+        """Create a full path from working directory and image name."""
         return os.path.join(self.directory, image)
     
     def readimages(self):
@@ -141,6 +143,7 @@ class Application:
         
     
     def getCoordinates(self):
+        """Read coordinates from the coordinate windows."""
         x = self.ulEntry.get().split(" ")
         y = self.lrEntry.get().split(" ")
         if not x:
@@ -150,33 +153,33 @@ class Application:
         
     
     def showNeedle(self):
+        """Draw a rectangle around the needle area."""
         self.getCoordinates()
         self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
         
-
     def modifyNeedle(self):
+        """Update the needle area."""
         self.getCoordinates()
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def hideNeedle(self):
+        """Delete the needle area."""
         self.pictureField.delete(self.rectangle)
     
     def getSCoordinates(self,event):
+        """Get upper left coordinates on left mouse click."""
         self.needleCoordinates[0] = (event.x,event.y)
         self.ulEntry.delete(0,"end")
         self.ulEntry.insert("end",self.needleCoordinates[0])
         self.pictureField.focus_set()
              
     def getECoordinates(self,event):
+        """Get lower right coordinates on right mouse click."""
         self.needleCoordinates[1] = (event.x,event.y)
         self.lrEntry.delete(0,"end")
         self.lrEntry.insert("end",self.needleCoordinates[1])
         self.pictureField.focus_set()
-        
-    
-        
-            
-        
+              
 
 #-----------------------------------------------------------------------------------------------
 
