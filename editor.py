@@ -215,8 +215,17 @@ class Application:
         apos = self.needleCoordinates[2]
         bpos = self.needleCoordinates[3]
         typ = self.typeList.get()
-        props = self.propText.get("1.0", "end").split("\n") 
-        tags = self.textField.get("1.0", "end").split("\n")
+        props = self.propText.get("1.0", "end")
+        if "\n" in props:
+            props = props.split("\n")
+            if props[0] == "":
+                props = []
+                    
+        tags = self.textField.get("1.0", "end")
+        if "\n" in tags:
+            tags = tags.split("\n")
+            if tags[0] == "":
+                tags = []
         coordinates = [xpos, ypos, apos, bpos, typ]
         self.needle.update(coordinates, tags, props)
         self.textJson.delete("1.0", "end")
