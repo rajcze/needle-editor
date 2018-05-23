@@ -42,7 +42,7 @@ class Application:
         self.createButton = tk.Button(self.buttonFrame, text="Show needle", command=self.showNeedle)
         self.createButton.grid(row=3,  column=0, sticky="nesw")
         
-        self.modifyButton = tk.Button(self.buttonFrame, text="Modify needle", command=self.modifyNeedle)
+        self.modifyButton = tk.Button(self.buttonFrame, text="Modify needle (m)", command=lambda: self.modifyNeedle(None))
         self.modifyButton.grid(row=4, column=0, sticky="nesw")
         
         self.hideButton = tk.Button(self.buttonFrame, text="Hide needle", command=self.hideNeedle)
@@ -68,7 +68,7 @@ class Application:
         self.pictureField.config(scrollregion=self.pictureField.bbox('ALL'))
         self.pictureField.bind("<Button 1>", self.getSCoordinates)
         self.pictureField.bind("<Button 3>", self.getECoordinates)
-        #self.pictureField.bind("m", self.modifyNeedle)
+        self.pictureField.bind("m", self.modifyNeedle)
         #self.pictureField.bind("m", lambda: self.modifyNeedle())
         
         self.xscroll.config(command=self.pictureField.xview)
@@ -177,7 +177,7 @@ class Application:
         self.getCoordinates()
         self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
         
-    def modifyNeedle(self):
+    def modifyNeedle(self, arg):
         """Update the needle area."""
         self.getCoordinates()
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
@@ -191,14 +191,14 @@ class Application:
         self.needleCoordinates[0] = (event.x,event.y)
         self.ulEntry.delete(0,"end")
         self.ulEntry.insert("end",self.needleCoordinates[0])
-        #self.pictureField.focus_set()
+        self.pictureField.focus_set()
              
     def getECoordinates(self,event):
         """Get lower right coordinates on right mouse click."""
         self.needleCoordinates[1] = (event.x,event.y)
         self.lrEntry.delete(0,"end")
         self.lrEntry.insert("end",self.needleCoordinates[1])
-        #self.pictureField.focus_set()
+        self.pictureField.focus_set()
         
     def loadNeedle(self):
         """Load existing needle into the window."""
