@@ -22,6 +22,7 @@ class Application:
         self.needleCoordinates = [0, 0, 100, 50]
         self.directory = ""
         self.rectangle = None
+        self.needle = jsonRecord("empty")
         
     def buildWidgets(self):
         """Construct GUI"""
@@ -49,7 +50,7 @@ class Application:
         self.hideButton = tk.Button(self.buttonFrame, text="Delete active area (d)", command=lambda: self.hideArea(None))
         self.hideButton.grid(row=5, column=0, sticky="news")
         
-        self.addButton = tk.Button(self.buttonFrame, text="Add area to needle (a)")
+        self.addButton = tk.Button(self.buttonFrame, text="Add area to needle (a)", command=lambda: self.addAreaToNeedle(None))
         self.addButton.grid(row=6, column=0, sticky="news")
         
         self.deleteButton = tk.Button(self.buttonFrame, text="Remove area from needle (r)")
@@ -214,11 +215,18 @@ class Application:
         apos = self.needleCoordinates[2]
         bpos = self.needleCoordinates[3]
         typ = self.typeList.get()
+        props = self.propText.get("1.0", "end").split("\n") 
+        tags = self.textField.get("1.0", "end").split("\n")
         coordinates = [xpos, ypos, apos, bpos, typ]
-        self.needle.updateArea(coordinates)
+        self.needle.update(coordinates, tags, props)
         self.textJson.delete("1.0", "end")
         json = self.needle.provideJson()
         self.textJson.insert("end", json)
+        
+    def addAreaToNeedle(self, arg):
+        """Add new area to needle."""
+        self.needle.addArea()
+        self.modifyArea(None)
         
     def startArea(self, event):
         xpos = event.x
@@ -316,31 +324,32 @@ class Application:
 class jsonRecord:
     def __init__(self, jsonfile):
         self.areaPos = 0
+        
         try:
             with open(jsonfile, "r") as inFile:
                 self.jsonData = json.load(inFile)
-                self.properties = self.jsonData["properties"]
-                self.areas = self.jsonData["area"]
-                self.tags = self.jsonData["tags"]
-                print("Properties: {}".format(self.properties))
-                print("Areas: {}".format(self.areas))
-                print("Tags: {}".format(self.tags))
     
         except FileNotFoundError:
-            self.properties = []
-            self.areas = []
-            self.tags = []
-            messagebox.showerror("Error", "No needle exists. Create one.")
-                  
+            self.jsonData = {"properties":[],
+                             "tags":[],
+                             "area":[]}
+            if jsonfile != "empty":
+                messagebox.showerror("Error", "No needle exists. Create one.")
+        self.areas = self.jsonData["area"]
+                   
     def provideJson(self):
         return self.jsonData
+            
+    
+    def provideAreaNumber(self):
+        return len(self.jsonData["area"])
     
     def provideProperties(self):
-        properties = "\n".join(self.properties)
+        properties = "\n".join(self.jsonData["properties"])
         return properties
     
     def provideTags(self):
-        tags = "\n".join(self.tags)
+        tags = "\n".join(self.jsonData["tags"])
         return tags
     
     def provideNextArea(self):
@@ -359,7 +368,7 @@ class jsonRecord:
         self.areaPos += 1
         return areaData
     
-    def updateArea(self, coordinates):
+    def update(self, coordinates, tags, props):
         xpos = coordinates[0]
         ypos = coordinates[1]
         apos = coordinates[2]
@@ -368,11 +377,19 @@ class jsonRecord:
         wide = int(apos) - int(xpos)
         high = int(bpos) - int(ypos)
         area = {"xpos":xpos, "ypos":ypos, "width":wide, "height":high, "type":typ}
-        self.areas[self.areaPos-1] = area
+        self.jsonData["properties"] = props
+        self.jsonData["tags"] = tags
         
+        try:
+            self.areas[self.areaPos-1] = area
+        except IndexError:
+            messagebox.showerror("Error", "Cannot modify non-existent area. Add area first!")
+        self.jsonData["area"] = self.areas
+            
+    def addArea(self):
+        self.areas.append("newarea")
+        self.areaPos = len(self.areas)
         
-    
-
         
         
 
