@@ -53,7 +53,7 @@ class Application:
         self.addButton = tk.Button(self.buttonFrame, text="Add area to needle (a)", command=lambda: self.addAreaToNeedle(None))
         self.addButton.grid(row=6, column=0, sticky="news")
         
-        self.deleteButton = tk.Button(self.buttonFrame, text="Remove area from needle (r)")
+        self.deleteButton = tk.Button(self.buttonFrame, text="Remove area from needle (r)", command=lambda: self.removeAreaFromNeedle(None))
         self.deleteButton.grid(row=7, column=0, sticky="news")
         
         self.loadButton = tk.Button(self.buttonFrame, text="Load needle (l)", command=lambda: self.loadNeedle(None))
@@ -102,36 +102,72 @@ class Application:
         
         self.propText = tk.Text(self.jsonFrame, width=50, height=5)
         self.propText.grid(row=3, column=0, sticky="ew")
-        
-        self.needleUL = tk.Label(self.jsonFrame, text="Needle Upper Left Coordinates:")
+
+        self.needleUL = tk.Label(self.jsonFrame, text="Area Coordinates:")
         self.needleUL.grid(row=4, column=0, sticky="w")
+
+        self.coordFrame = tk.Frame(self.jsonFrame)
+        self.coordFrame.grid(row=5, column=0, sticky="ew")
+
+        self.axLable = tk.Label(self.coordFrame, text="X1:")
+        self.axLable.grid(row=0, column=0, sticky="w")
         
-        self.ulEntry = tk.Entry(self.jsonFrame)
-        self.ulEntry.grid(row=5, column=0, sticky="ew")
-        
-        self.needleLR = tk.Label(self.jsonFrame, text="Needle Lower Right Coordinates:")
-        self.needleLR.grid(row=6, column=0, sticky="w")
-        
-        self.lrEntry = tk.Entry(self.jsonFrame)
-        self.lrEntry.grid(row=7, column=0, sticky="ew")
-        
+        self.axEntry = tk.Entry(self.coordFrame, width=5)
+        self.axEntry.grid(row=0, column=1, sticky="w")
+
+        self.ayLable = tk.Label(self.coordFrame, text="Y1:")
+        self.ayLable.grid(row=0, column=2, sticky="w")
+
+        self.ayEntry = tk.Entry(self.coordFrame, width=5)
+        self.ayEntry.grid(row=0, column=3, sticky="w")
+
+        self.widthLabel = tk.Label(self.coordFrame, text="Area width:")
+        self.widthLabel.grid(row=0, column=4, sticky="w")
+
+        self.widthEntry = tk.Entry(self.coordFrame, width=5)
+        self.widthEntry.grid(row=0, column=5, sticky="w")
+
+        self.heigthLabel = tk.Label(self.coordFrame, text="Area heigth:")
+        self.heigthLabel.grid(row=1, column=4, sticky="w")
+
+        self.heigthEntry = tk.Entry(self.coordFrame, width=5)
+        self.heigthEntry.grid(row=1, column=5, sticky="w")
+
+        self.bxLable = tk.Label(self.coordFrame, text="X2:")
+        self.bxLable.grid(row=1, column=0, sticky="w")
+
+        self.bxEntry = tk.Entry(self.coordFrame, width=5)
+        self.bxEntry.grid(row=1, column=1, sticky="w")
+
+        self.byLable = tk.Label(self.coordFrame, text="Y2:")
+        self.byLable.grid(row=1, column=2, sticky="w")
+
+        self.byEntry = tk.Entry(self.coordFrame, width=5)
+        self.byEntry.grid(row=1, column=3, sticky="w")
+
         self.listLabel = tk.Label(self.jsonFrame, text="Area type:")
-        self.listLabel.grid(row=8, column=0, sticky="w")
+        self.listLabel.grid(row=6, column=0, sticky="w")
         
-        self.typeList = tk.Spinbox(self.jsonFrame, values=["match","ocr","someother"])
-        self.typeList.grid(row=9, column=0, sticky="ew")
+        self.typeList = tk.Spinbox(self.jsonFrame, values=["match","ocr","exclude"])
+        self.typeList.grid(row=7, column=0, sticky="ew")
         
         self.textLabel = tk.Label(self.jsonFrame, text="Tags:")
-        self.textLabel.grid(row=10, column=0, sticky="w")
+        self.textLabel.grid(row=8, column=0, sticky="w")
         
         self.textField = tk.Text(self.jsonFrame, width=50, height=15)
-        self.textField.grid(row=11, column=0, sticky="ew")
+        self.textField.grid(row=9, column=0, sticky="ew")
         
         self.jsonLabel = tk.Label(self.jsonFrame, text="Json Data:")
-        self.jsonLabel.grid(row=12, column=0, sticky="w")
+        self.jsonLabel.grid(row=10, column=0, sticky="w")
         
         self.textJson = tk.Text(self.jsonFrame, width=50, height=15)
-        self.textJson.grid(row=13, column=0, sticky="ew")
+        self.textJson.grid(row=11, column=0, sticky="ew")
+
+        self.needleLable = tk.Label(self.jsonFrame, text="Areas in needle: ")
+        self.needleLable.grid(row=12, column=0, sticky="w")
+
+        self.needleEntry = tk.Entry(self.jsonFrame, width=5)
+        self.needleEntry.grid(row=13, column=0, sticky="w")
         
 
     def returnPath(self, image):
@@ -161,6 +197,7 @@ class Application:
         self.background = self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
         self.nameEntry.delete(0, "end")
         self.nameEntry.insert("end", self.imageName)
+        self.pictureField.focus_set()
                
     def nextImage(self, arg):
         """Display next image on the list."""
@@ -185,12 +222,20 @@ class Application:
     
     def getCoordinates(self):
         """Read coordinates from the coordinate windows."""
-        x = self.ulEntry.get().split(" ")
-        y = self.lrEntry.get().split(" ")
-        if not x:
+        xpos = int(self.axEntry.get())
+        ypos = int(self.ayEntry.get())
+        apos = int(self.bxEntry.get())
+        bpos = int(self.byEntry.get())
+
+        if not xpos:
             self.needleCoordinates = [0, 0, 100, 200]
         else:
-            self.needleCoordinates = x + y
+            self.needleCoordinates = [xpos, ypos, apos, bpos]
+
+    def calculateSize(self, coordinates):
+        width = int(coordinates[2]) - int(coordinates[0])
+        heigth = int(coordinates[3]) - int(coordinates[1])
+        return [width, heigth]
             
     def showArea(self, arg):
         """Load area and draw a rectangle around it."""
@@ -199,13 +244,24 @@ class Application:
         self.needleCoordinates = [self.area[0], self.area[1], self.area[2], self.area[3]]
         typ = self.area[4]
         self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
-        self.ulEntry.delete(0, "end")
-        self.ulEntry.insert("end", "{} {}".format(self.needleCoordinates[0], self.needleCoordinates[1]))
-        self.lrEntry.delete(0, "end")
-        self.lrEntry.insert("end", "{} {}".format(self.needleCoordinates[2], self.needleCoordinates[3]))
+        self.displayCoordinates(self.needleCoordinates)
         self.typeList.delete(0, "end")
         self.typeList.insert("end", typ)
-        
+
+    def displayCoordinates(self, coordinates):
+        self.axEntry.delete(0, "end")
+        self.axEntry.insert("end", coordinates[0])
+        self.ayEntry.delete(0, "end")
+        self.ayEntry.insert("end", coordinates[1])
+        self.bxEntry.delete(0, "end")
+        self.bxEntry.insert("end", coordinates[2])
+        self.byEntry.delete(0, "end")
+        self.byEntry.insert("end", coordinates[3])
+        size = self.calculateSize(coordinates)
+        self.widthEntry.delete(0, "end")
+        self.widthEntry.insert("end", size[0])
+        self.heigthEntry.delete(0, "end")
+        self.heigthEntry.insert("end", size[1])
         
     def modifyArea(self, arg):
         """Update the needle area."""
@@ -215,27 +271,43 @@ class Application:
         apos = self.needleCoordinates[2]
         bpos = self.needleCoordinates[3]
         typ = self.typeList.get()
-        props = self.propText.get("1.0", "end")
+        props = self.propText.get("1.0", "end-1c")
         if "\n" in props:
             props = props.split("\n")
-            if props[0] == "":
-                props = []
-                    
-        tags = self.textField.get("1.0", "end")
+        if props == "":
+            props = []
+        tags = self.textField.get("1.0", "end-1c")
         if "\n" in tags:
             tags = tags.split("\n")
-            if tags[0] == "":
-                tags = []
+        if tags == "":
+            tags = []
         coordinates = [xpos, ypos, apos, bpos, typ]
         self.needle.update(coordinates, tags, props)
         self.textJson.delete("1.0", "end")
         json = self.needle.provideJson()
         self.textJson.insert("end", json)
+        self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def addAreaToNeedle(self, arg):
         """Add new area to needle."""
         self.needle.addArea()
         self.modifyArea(None)
+        areas = self.needle.provideAreaCount()
+        self.needleEntry.delete(0, "end")
+        self.needleEntry.insert("end", areas)
+
+    def removeAreaFromNeedle(self, arg):
+        self.needle.removeArea()
+        areas = self.needle.provideAreaCount()
+        coordinates = [0, 0, 0, 0]
+        self.displayCoordinates(coordinates)
+        self.needleEntry.delete(0, "end")
+        self.needleEntry.insert("end", areas)
+        json = self.needle.provideJson()
+        self.textJson.delete("1.0", "end")
+        self.textJson.insert("end", json)
+        self.pictureField.delete(self.rectangle)
+        self.rectangle = None
         
     def startArea(self, event):
         xpos = event.x
@@ -252,51 +324,57 @@ class Application:
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def endArea(self, event):
+        coordinates = [0, 0, 1, 1]
         xpos = self.needleCoordinates[0]
         ypos = self.needleCoordinates[1]
         apos = self.needleCoordinates[2]
         bpos = self.needleCoordinates[3]
+        self.pictureField.focus_set()
         
         if xpos < apos and ypos < bpos:
-            self.ulEntry.delete(0, "end")
-            self.ulEntry.insert("end", "{} {}".format(xpos, ypos))
-            self.lrEntry.delete(0, "end")
-            self.lrEntry.insert("end", "{} {}".format(apos, bpos))
+            coordinates[0] = xpos
+            coordinates[1] = ypos
+            coordinates[2] = apos
+            coordinates[3] = bpos
         elif xpos > apos and ypos > bpos:
-            self.ulEntry.delete(0, "end")
-            self.ulEntry.insert("end", "{} {}".format(apos, bpos))
-            self.lrEntry.delete(0, "end")
-            self.lrEntry.insert("end", "{} {}".format(xpos, ypos))
+            coordinates[0] = apos
+            coordinates[1] = bpos
+            coordinates[2] = xpos
+            coordinates[3] = ypos
         elif xpos < apos and ypos > bpos:
-            self.ulEntry.delete(0, "end")
-            self.ulEntry.insert("end", "{} {}".format(xpos, bpos))
-            self.lrEntry.delete(0, "end")
-            self.lrEntry.insert("end", "{} {}".format(apos, ypos))
+            coordinates[0] = xpos
+            coordinates[1] = bpos
+            coordinates[2] = apos
+            coordinates[3] = ypos
         elif xpos > apos and ypos < bpos:
-            self.ulEntry.delete(0, "end")
-            self.ulEntry.insert("end", "{} {}".format(apos, ypos))
-            self.lrEntry.delete(0, "end")
-            self.lrEntry.insert("end", "{} {}".format(xpos, bpos))
-            
+            coordinates[0] = apos
+            coordinates[1] = ypos
+            coordinates[2] = xpos
+            coordinates[3] = bpos
+        self.displayCoordinates(coordinates)
         
     def hideArea(self, arg):
         """Delete the needle area."""
         self.pictureField.delete(self.rectangle)
         self.rectangle = None
+        self.axEntry.delete(0, "end")
+        self.ayEntry.delete(0, "end")
+        self.bxEntry.delete(0, "end")
+        self.byEntry.delete(0, "end")
     
-    def getSCoordinates(self,event):
-        """Get upper left coordinates on left mouse click."""
-        self.needleCoordinates[0] = (event.x,event.y)
-        self.ulEntry.delete(0,"end")
-        self.ulEntry.insert("end",self.needleCoordinates[0])
-        self.pictureField.focus_set()
-             
-    def getECoordinates(self,event):
-        """Get lower right coordinates on right mouse click."""
-        self.needleCoordinates[1] = (event.x,event.y)
-        self.lrEntry.delete(0,"end")
-        self.lrEntry.insert("end",self.needleCoordinates[1])
-        self.pictureField.focus_set()
+    # def getSCoordinates(self,event):
+    #     """Get upper left coordinates on left mouse click."""
+    #     self.needleCoordinates[0] = (event.x,event.y)
+    #     self.ulEntry.delete(0,"end")
+    #     self.ulEntry.insert("end",self.needleCoordinates[0])
+    #     self.pictureField.focus_set()
+    #
+    # def getECoordinates(self,event):
+    #     """Get lower right coordinates on right mouse click."""
+    #     self.needleCoordinates[1] = (event.x,event.y)
+    #     self.lrEntry.delete(0,"end")
+    #     self.lrEntry.insert("end",self.needleCoordinates[1])
+    #     self.pictureField.focus_set()
         
     def loadNeedle(self, arg):
         """Load existing needle into the window."""
@@ -313,20 +391,10 @@ class Application:
         json = self.needle.provideJson()
         self.textJson.delete("1.0", "end")
         self.textJson.insert("end", json)
-        
-#         area = data["area"][0]
-#         coordinates = self.calculateCoordinates(int(area["xpos"]), int(area["ypos"]), int(area["width"]), int(area["height"]))
-#         self.lrEntry.delete(0, "end")
-#         self.lrEntry.insert("end", "{} {}".format(coordinates[2], coordinates[3]))
-#         self.ulEntry.delete(0, "end")
-#         self.ulEntry.insert("end", "{} {}".format(coordinates[0], coordinates[1]))
-#         ntype = area["type"]
-#         self.typeList.delete(0, "end")
-#         self.typeList.insert("end", ntype)
-        
-        #data = needle.provideData()    
-        #self.parseData(data)
-        
+        areas = self.needle.provideAreaCount()
+        self.needleEntry.delete(0, "end")
+        self.needleEntry.insert(0, areas)
+
 
 
 #-----------------------------------------------------------------------------------------------
@@ -348,10 +416,7 @@ class jsonRecord:
                    
     def provideJson(self):
         return self.jsonData
-            
-    
-    def provideAreaNumber(self):
-        return len(self.jsonData["area"])
+
     
     def provideProperties(self):
         properties = "\n".join(self.jsonData["properties"])
@@ -398,6 +463,16 @@ class jsonRecord:
     def addArea(self):
         self.areas.append("newarea")
         self.areaPos = len(self.areas)
+
+    def removeArea(self):
+        try:
+            deleted = self.areas.pop(self.areaPos-1)
+        except IndexError:
+            messagebox.showerror("Error", "No area in the needle. Not deleting anything.")
+        self.jsonData["area"] = self.areas
+
+    def provideAreaCount(self):
+        return len(self.areas)
         
         
         
