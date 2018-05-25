@@ -18,13 +18,14 @@ class Application:
         self.frame = tk.Frame(master)
         self.frame.grid()
         self.buildWidgets()
-        self.images = []
-        self.needleCoordinates = [0, 0, 100, 50]
-        self.directory = ""
-        self.rectangle = None
-        self.needle = needleData({"properties":[], "tags":[], "area":[]})
-        self.imageName = None
-        self.handler = None
+        self.images = [] # List of images to be handled.
+        self.needleCoordinates = [0, 0, 0, 0] # Coordinates of the needle area
+        self.directory = "" # Active working directory
+        self.rectangle = None # The red frame around the area
+        self.needle = needleData({"properties":[], "tags":[], "area":[]}) # The Needle object
+        self.imageName = None # The name of the active image
+        self.handler = None # The file reader and writer object
+        self.imageCount = 0 # Counter for
         
     def buildWidgets(self):
         """Construct GUI"""
@@ -180,13 +181,16 @@ class Application:
         return os.path.join(self.directory, image)
     
     def readimages(self):
-        """Read png images from the given directory and return a list of their names."""
+        """Read png images from the given directory and create a list of their names."""
         self.images = []
         self.directory = filedialog.askdirectory()
         for file in os.listdir(self.directory):
             if file.endswith(".png"):
                 self.images.append(file)
-        print("Found {} images.".format(len(self.images)))
+        if len(self.images) == 1:
+            messagebox.showinfo("Found images", "Found 1 image in the selected directory.")
+        else:
+            messagebox.showinfo("Found images", "Found {} images in the selected directory.".format(len(self.images)))
         self.imageCount = 0
         self.imageName = self.images[0]
         self.displayImage(self.returnPath(self.imageName))
@@ -200,8 +204,10 @@ class Application:
         self.picsize = (self.picture.width,self.picture.height)
         self.image = tk.PhotoImage(file=path)
         self.background = self.pictureField.create_image((1, 1), image=self.image, anchor='nw')
+        self.nameEntry.config(state="normal")
         self.nameEntry.delete(0, "end")
         self.nameEntry.insert("end", self.imageName)
+        self.nameEntry.config(state="readonly")
         self.pictureField.focus_set()
                
     def nextImage(self, arg):
@@ -236,12 +242,13 @@ class Application:
         apos = int(self.bxEntry.get())
         bpos = int(self.byEntry.get())
 
-        if not xpos:
+        if not xpos and not apos:
             self.needleCoordinates = [0, 0, 100, 200]
         else:
             self.needleCoordinates = [xpos, ypos, apos, bpos]
 
     def calculateSize(self, coordinates):
+        """Calculate size of the area from its coordinates."""
         width = int(coordinates[2]) - int(coordinates[0])
         heigth = int(coordinates[3]) - int(coordinates[1])
         return [width, heigth]
@@ -253,7 +260,7 @@ class Application:
         try:
             self.needleCoordinates = [self.area[0], self.area[1], self.area[2], self.area[3]]
             typ = self.area[4]
-            self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
+            self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red", width=2)
             self.displayCoordinates(self.needleCoordinates)
             self.typeList.delete(0, "end")
             self.typeList.insert("end", typ)
@@ -262,6 +269,7 @@ class Application:
 
 
     def displayCoordinates(self, coordinates):
+        """Disply coordinates in the GUI"""
         self.axEntry.delete(0, "end")
         self.axEntry.insert("end", coordinates[0])
         self.ayEntry.delete(0, "end")
@@ -277,7 +285,7 @@ class Application:
         self.heigthEntry.insert("end", size[1])
         
     def modifyArea(self, arg):
-        """Update the needle area."""
+        """Update the information for the active needle area, including properties, tags, etc."""
         self.getCoordinates()
         xpos = self.needleCoordinates[0]
         ypos = self.needleCoordinates[1]
@@ -302,14 +310,16 @@ class Application:
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def addAreaToNeedle(self, arg):
-        """Add new area to needle."""
+        """Add new area to needle. The needle can have more areas."""
         self.needle.addArea()
         self.modifyArea(None)
         areas = self.needle.provideAreaCount()
         self.needleEntry.delete(0, "end")
         self.needleEntry.insert("end", areas)
 
+
     def removeAreaFromNeedle(self, arg):
+        """Remove the active area from the needle (deletes it)."""
         self.needle.removeArea()
         areas = self.needle.provideAreaCount()
         coordinates = [0, 0, 0, 0]
@@ -321,15 +331,18 @@ class Application:
         self.textJson.insert("end", json)
         self.pictureField.delete(self.rectangle)
         self.rectangle = None
+        self.showArea(None)
         
     def startArea(self, event):
+        """Get coordinates on mouse click and start drawing the rectangle from this point."""
         xpos = event.x
         ypos = event.y
         self.startPoint = [xpos, ypos]
         if self.rectangle == None:
-            self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red")
+            self.rectangle = self.pictureField.create_rectangle(self.needleCoordinates, outline="red", width=2)
             
     def redrawArea(self, event):
+        """Upon mouse drag update the size of the rectangle as the mouse is moving."""
         apos = event.x
         bpos = event.y
         self.endPoint = [apos, bpos]
@@ -337,6 +350,7 @@ class Application:
         self.pictureField.coords(self.rectangle, self.needleCoordinates)
         
     def endArea(self, event):
+        """Stop drawing the rectangle and record the coordinates to match the final size."""
         coordinates = [0, 0, 1, 1]
         xpos = self.needleCoordinates[0]
         ypos = self.needleCoordinates[1]
@@ -368,7 +382,7 @@ class Application:
 
         
     def loadNeedle(self, arg):
-        """Load existing needle into the window."""
+        """Load the existing needle information from the file and display them in the window."""
         if self.imageName != None:
             jsonfile = self.returnPath(self.imageName).replace(".png", ".json")
             self.handler = fileHandler(jsonfile)
@@ -388,11 +402,15 @@ class Application:
             areas = self.needle.provideAreaCount()
             self.needleEntry.delete(0, "end")
             self.needleEntry.insert(0, areas)
+            if self.rectangle != None:
+                self.pictureField.delete(self.rectangle)
+                self.rectangle = None
             self.showArea(None)
         else:
             messagebox.showerror("Error", "No images are loaded. Select image directory first.")
 
     def createNeedle(self, arg):
+        """Write out the json file for the actual image to store the needle permanently."""
         jsondata = self.needle.provideJson()
         filename = self.nameEntry.get().replace(".png", ".json")
         path = self.returnPath(filename)
@@ -400,9 +418,9 @@ class Application:
             self.handler = fileHandler(path)
         self.handler.acceptData(jsondata)
         self.handler.writeFile(path)
+        self.pictureField.delete(self.rectangle)
+        self.rectangle = None
 
-        # self.needle.writeJsonData(filename)
-        # messagebox.showinfo("Info", "The needle has been created.")
 #-----------------------------------------------------------------------------------------------
 
 class fileHandler:
@@ -413,6 +431,7 @@ class fileHandler:
         self.jsonfile = jsonfile
 
     def readFile(self):
+        """Read the json file and create the data variable with the info."""
         try:
             with open(self.jsonfile, "r") as inFile:
                 self.jsonData = json.load(inFile)
@@ -423,13 +442,17 @@ class fileHandler:
                 messagebox.showerror("Error", "No images are loaded. Select image directory.")
 
     def writeFile(self, jsonfile):
+        """Take the data variable and write is out as a json file."""
         with open(jsonfile, "w") as outFile:
             json.dump(self.jsonData, outFile)
+        messagebox.showinfo("Info", "The needle has been written out.")
 
     def provideData(self):
+        """Provide the json file."""
         return self.jsonData
 
     def acceptData(self, jsondata):
+        """Update the data in data variable."""
         self.jsonData = jsondata
 
 class needleData:
@@ -439,17 +462,21 @@ class needleData:
         self.areaPos = 0
 
     def provideJson(self):
+        """Provide the json data (for the GUI)."""
         return self.jsonData
 
     def provideProperties(self):
+        """Provide properties."""
         properties = "\n".join(self.jsonData["properties"])
         return properties
     
     def provideTags(self):
+        """Provide tags."""
         tags = "\n".join(self.jsonData["tags"])
         return tags
     
     def provideNextArea(self):
+        """Provide information about the active area and move pointer to the next area for future reference."""
         try:
             area = self.areas[self.areaPos]
             xpos = area["xpos"]
@@ -466,6 +493,7 @@ class needleData:
             messagebox.showerror("Error", "No more area in the needle.")
 
     def update(self, coordinates, tags, props):
+        """Update all information taken from the GUI in the data variable."""
         xpos = coordinates[0]
         ypos = coordinates[1]
         apos = coordinates[2]
@@ -474,6 +502,10 @@ class needleData:
         wide = int(apos) - int(xpos)
         high = int(bpos) - int(ypos)
         area = {"xpos":xpos, "ypos":ypos, "width":wide, "height":high, "type":typ}
+        if type(props) != list:
+            props = [props]
+        if type(tags) != list:
+            tags = [tags]
         self.jsonData["properties"] = props
         self.jsonData["tags"] = tags
         
@@ -484,27 +516,28 @@ class needleData:
         self.jsonData["area"] = self.areas
             
     def addArea(self):
+        """Add new area to the needle (at the end of the list)."""
         self.areas.append("newarea")
         self.areaPos = len(self.areas)
 
     def removeArea(self):
+        """Remove the active area from the area list."""
         try:
             deleted = self.areas.pop(self.areaPos-1)
             self.jsonData["area"] = self.areas
+            self.areaPos -= 2
         except IndexError:
             messagebox.showerror("Error", "No area in the needle. Not deleting anything.")
 
     def provideAreaCount(self):
+        """Provide the number of the areas in the needle."""
         return len(self.areas)
 
-
-
-        
 
 #-----------------------------------------------------------------------------------------------
 
 root = tk.Tk()
-root.title("Python Needle Editor for OpenQA (Draft Version)")
+root.title("Python Needle Editor for OpenQA (Version 0.99)")
 
 app = Application(root)
 
