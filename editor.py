@@ -24,6 +24,7 @@ class Application:
         self.rectangle = None
         self.needle = needleData({"properties":[], "tags":[], "area":[]})
         self.imageName = None
+        self.handler = None
         
     def buildWidgets(self):
         """Construct GUI"""
@@ -211,6 +212,8 @@ class Application:
         except IndexError:
             self.imageName = self.images[0]
             self.imageCount = 0
+        self.pictureField.delete(self.rectangle)
+        self.rectangle = None
         self.displayImage(self.returnPath(self.imageName))
 
     def prevImage(self, arg):
@@ -221,6 +224,8 @@ class Application:
         except IndexError:
             self.imageName = self.images[-1]
             self.imageCount = len(self.images)
+        self.pictureField.delete(self.rectangle)
+        self.rectangle = None
         self.displayImage(self.returnPath(self.imageName))
         
     
@@ -389,10 +394,12 @@ class Application:
 
     def createNeedle(self, arg):
         jsondata = self.needle.provideJson()
-        self.handler.acceptData(jsondata)
-        filename = self.nameEntry.get().replace(".png",".json")
+        filename = self.nameEntry.get().replace(".png", ".json")
         path = self.returnPath(filename)
-        print(path)
+        if self.handler == None:
+            self.handler = fileHandler(path)
+        self.handler.acceptData(jsondata)
+        self.handler.writeFile(path)
 
         # self.needle.writeJsonData(filename)
         # messagebox.showinfo("Info", "The needle has been created.")
