@@ -13,7 +13,7 @@ import json
 from tkinter import filedialog, messagebox
 
 class Application:
-    """ Holds the GUI part and widgets """
+    """ Hold the GUI frames and widgets, as well as the handling in the GUI. """
     def __init__(self, master):
         self.frame = tk.Frame(master)
         self.frame.grid()
@@ -81,8 +81,11 @@ class Application:
         self.pictureField.bind("m", self.modifyArea)
         self.pictureField.bind("s", self.showArea)
         self.pictureField.bind("n", self.nextImage)
+        self.pictureField.bind("a", self.addAreaToNeedle)
+        self.pictureField.bind("r", self.removeAreaFromNeedle)
         self.pictureField.bind("p", self.prevImage)
-       # self.pictureField.bind("d", self.hideArea)
+        self.pictureField.bind("l", self.loadNeedle)
+        self.pictureField.bind("c", self.createNeedle)
        # self.pictureField.bind("c", self.saveNeedle)
         #self.pictureField.bind("m", lambda: self.modifyNeedle())
         
@@ -387,9 +390,8 @@ class Application:
     def createNeedle(self, arg):
         jsondata = self.needle.provideJson()
         self.handler.acceptData(jsondata)
-        # FIXME
         filename = self.nameEntry.get().replace(".png",".json")
-        path = os.path.join(self.directory, filename)
+        path = self.returnPath(filename)
         print(path)
 
         # self.needle.writeJsonData(filename)
@@ -408,7 +410,7 @@ class fileHandler:
             with open(self.jsonfile, "r") as inFile:
                 self.jsonData = json.load(inFile)
         except FileNotFoundError:
-            if jsonfile != "empty":
+            if self.jsonfile != "empty":
                 messagebox.showerror("Error", "No needle exists. Create one.")
             else:
                 messagebox.showerror("Error", "No images are loaded. Select image directory.")
